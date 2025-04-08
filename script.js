@@ -52,6 +52,8 @@ let playerTurn = true;
 let currentDeck = [];
 let cardsDealt = 0;
 let initialDealComplete = false;
+let StartMoney = 100;
+let Stake = 0 
 
 // DOM элементы
 const hitBtn = document.getElementById('hit-btn');
@@ -62,29 +64,40 @@ const dealerCardsEl = document.getElementById('dealer-cards');
 const playerScoreEl = document.getElementById('player-score');
 const dealerScoreEl = document.getElementById('dealer-score');
 const messageEl = document.getElementById('message');
+const submitBtn = document.getElementById('submitBtn');
 
-// Инициализация новой игры
+// ============ Инициализация ============
 function initGame() {
     playerScore = 0;
     dealerScore = 0;
+    PlayerMoney = StartMoney
+    Stake = 0;
     gameOver = false;
     playerTurn = true;
-    cardsDealt = 0;
+    playerCards = [];
+    dealerCards = [];
     initialDealComplete = false;
-    
+
+    document.getElementById('player-money').textContent = PlayerMoney;
+
     playerCardsEl.innerHTML = '';
     dealerCardsEl.innerHTML = '';
     playerScoreEl.textContent = '0';
     dealerScoreEl.textContent = '?';
     messageEl.textContent = 'Нажмите "Взять карту" для начала';
-    
+
     currentDeck = shuffleDeck([...fullDeck]);
-    
+
     hitBtn.disabled = false;
-    standBtn.disabled = true;
+    standBtn.disabled = false;
+
+    
+    // Скрытые карты дилера
+    dealCard('dealer', true);
+    dealCard('dealer', true);
 }
 
-// Перемешивание колоды
+// ============ Перемешивание ============
 function shuffleDeck(deck) {
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -93,49 +106,45 @@ function shuffleDeck(deck) {
     return deck;
 }
 
-// Выдача карты
-function dealCard(target) {
+// ============ Выдача карты ============
+function dealCard(target, hidden = false) {
     if (gameOver || currentDeck.length === 0) return;
-    
+
     const card = currentDeck.pop();
-    const cardValue = card.value;
-    
+
     const cardEl = document.createElement('div');
     cardEl.className = 'card';
-    cardEl.style.backgroundImage = `url(${card.image})`;
+
+    if (hidden) {
+        cardEl.style.backgroundImage = `url(images/cards/dealer.png)`; // Рубашка
+        cardEl.dataset.hidden = 'true';
+    } else {
+        cardEl.style.backgroundImage = `url(${card.image})`;
+        cardEl.dataset.hidden = 'false';
+    }
+
     if (card.isAce) cardEl.dataset.isAce = 'true';
-    
+
+    setTimeout(() => cardEl.classList.add('visible'), 50);
+
     if (target === 'player') {
-        playerScore += cardValue;
+        playerScore += card.value;
+        playerCards.push(card);
         playerCardsEl.appendChild(cardEl);
         playerScoreEl.textContent = playerScore;
         checkPlayerBust();
-    } else {
-        dealerScore += cardValue;
+    } else if (target === 'dealer') {
+        dealerScore += card.value;
+        dealerCards.push(card);
         dealerCardsEl.appendChild(cardEl);
-        // Первая карта дилера скрыта
-        if (cardsDealt >= 3) {
-            dealerScoreEl.textContent = dealerScore;
-        }
-    }
-    
-    setTimeout(() => cardEl.classList.add('visible'), 50);
-    
-    cardsDealt++;
-    
-    // После 3 карт (2 игроку, 1 дилеру) активируем кнопку "Пас"
-    if (cardsDealt === 3) {
-        initialDealComplete = true;
-        standBtn.disabled = false;
-        messageEl.textContent = 'Берите карты или пасуйте';
     }
 }
 
-// Проверка перебора
+// ============ Проверка перебора игрока ============
 function checkPlayerBust() {
     if (playerScore > 21) {
         const aces = document.querySelectorAll('#player-cards .card[data-is-ace="true"]');
-        
+
         for (const ace of aces) {
             if (playerScore > 21 && ace.dataset.aceValue !== '1') {
                 playerScore -= 10;
@@ -143,62 +152,80 @@ function checkPlayerBust() {
                 ace.dataset.aceValue = '1';
             }
         }
-        
+
         if (playerScore > 21) {
-            endGame('Перебор! Вы проиграли');
+            endGame('Перебор! Вы проиграли.');
         }
     }
 }
 
-// Ход дилера
+// ============ Вскрытие карт дилера ============
+function revealDealerCards() {
+    const dealerCardElements = dealerCardsEl.children;
+    dealerScore = 0;
+
+    for (let i = 0; i < dealerCardElements.length; i++) {
+        const cardEl = dealerCardElements[i];
+        const card = dealerCards[i];
+
+        cardEl.style.backgroundImage = `url(${card.image})`;
+        cardEl.dataset.hidden = 'false';
+
+        dealerScore += card.value;
+    }
+
+    dealerScoreEl.textContent = dealerScore;
+}
+
+// ============ Ход дилера ============
 function dealerTurn() {
     playerTurn = false;
     hitBtn.disabled = true;
     standBtn.disabled = true;
-    
-    // Показываем скрытую карту дилера
-    dealerScoreEl.textContent = dealerScore;
-    
-    // ИИ дилера
-    const dealerAI = () => {
-        if (dealerScore < 17 || (dealerScore === 17 && hasAce(dealerCardsEl))) {
+
+    revealDealerCards();
+
+    // AI дилера
+    const play = () => {
+        if (dealerScore < 17 || (dealerScore === 17 && dealerCards.some(c => c.isAce))) {
             setTimeout(() => {
                 dealCard('dealer');
-                dealerAI();
+                revealDealerCards(); // обновим счёт
+                play();
             }, 1000);
         } else {
             checkWinner();
         }
     };
-    
-    dealerAI();
+
+    setTimeout(play, 1000);
 }
 
-// Проверка наличия туза
-function hasAce(cardsContainer) {
-    return Array.from(cardsContainer.children).some(card => card.dataset.isAce === 'true');
-}
-
-// Определение победителя
+// ============ Выбор победителя ============
 function checkWinner() {
     let message = '';
-    
+
     if (dealerScore > 21) {
         message = 'Дилер перебрал! Вы выиграли!';
+        playerMoney = playerMoneyNew * 2
     } else if (playerScore > 21) {
         message = 'Вы перебрали! Дилер выиграл!';
+        playerMoney = playerMoneyNew
     } else if (playerScore > dealerScore) {
-        message = 'Поздравляем! Вы выиграли!';
+        message = 'Вы выиграли!';
+        playerMoney = playerMoneyNew * 2
     } else if (playerScore < dealerScore) {
         message = 'Дилер выиграл!';
-    } else {
-        message = 'Ничья!';
+        playerMoney = playerMoneyNew
+    } else if (playerScore === dealerScore) {
+        message = 'ничья';
+        playerMoney = playerMoneyNew + Stake
     }
-    
+
     endGame(message);
 }
 
-// Завершение игры
+// ============ Завершение ============
 function endGame(message) {
     gameOver = true;
     messageEl.textContent = message;
@@ -206,32 +233,28 @@ function endGame(message) {
     standBtn.disabled = true;
 }
 
-// Обработчики событий
+// ============ События ============
 hitBtn.addEventListener('click', () => {
-    if (gameOver) return;
-    
-    if (!initialDealComplete) {
-        // Начальная раздача
-        if (cardsDealt < 2) {
-            dealCard('player');
-        } else if (cardsDealt === 2) {
-            dealCard('dealer');
-        }
-    } else {
-        // Обычный ход
-        if (playerTurn) {
-            dealCard('player');
-        }
+    if (!gameOver && playerTurn) {
+        dealCard('player');
     }
 });
 
 standBtn.addEventListener('click', () => {
-    if (playerTurn && !gameOver && initialDealComplete) {
+    if (!gameOver && playerTurn) {
         dealerTurn();
     }
 });
 
 restartBtn.addEventListener('click', initGame);
 
-// Запуск игры
+submitBtn.addEventListener('click', () => {
+    const Stake = StakeInput.value.trim();
+
+    PlayerMoney = PlayerMoney - Stake;
+    document.getElementById('player-money').textContent = PlayerMoney;
+
+})
+
+// Старт
 document.addEventListener('DOMContentLoaded', initGame);
