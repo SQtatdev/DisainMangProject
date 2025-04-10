@@ -1,0 +1,145 @@
+:root {
+  --primary-color: #2c3e50;
+  --secondary-color: #34495e;
+  --accent-color: #f1c40f;
+  --button-color: #3498db;
+  --button-hover: #2980b9;
+  --text-light: #ecf0f1;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: rgb(9, 80, 9);
+  color: var(--text-light);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.layout {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  height: 90vh;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.sidebar {
+  width: 25%;
+  background-color: var(--primary-color);
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-light);
+  display: flex;
+  flex-direction: column;
+  justify-content: top;
+}
+
+.sidebar h1 {
+  font-size: 3rem;
+  color: var(--accent-color);
+  margin-bottom: 50px;
+}
+
+.menu-list {
+  text-align: center;
+  
+  list-style: none;
+  padding: 0;
+}
+
+.menu-list li {
+  margin: 20px 0;
+}
+
+.menu-list a {
+  display: block;
+  background-color: rgba(241, 196, 15, 0.15);
+  color: var(--accent-color);
+  font-weight: bold;
+  text-decoration: none;
+  padding: 12px 0;
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.menu-list a:hover {
+  background-color: rgba(241, 196, 15, 0.3);
+}
+
+.main {
+  width: 75%;
+  background-color: rgba(44, 62, 80, 0.85);
+  padding: 40px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: top;
+}
+
+.main h1 {
+  color: var(--accent-color);
+  font-size: 3rem;
+  text-align: center;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  background-color: var(--button-color);
+  color: white;
+  padding: 15px 30px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: var(--shadow);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn:hover {
+  background-color: var(--button-hover);
+  transform: translateY(-3px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+  }
+
+  .main {
+    width: 100%;
+    padding: 30px 20px;
+  }
+}

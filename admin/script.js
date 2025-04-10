@@ -61,7 +61,6 @@ let stake = 0;
 const hitBtn = document.getElementById('hit-btn');
 const standBtn = document.getElementById('stand-btn');
 const submitBtn = document.getElementById('submitBtn');
-
 const playerCardsEl = document.getElementById('player-cards');
 const dealerCardsEl = document.getElementById('dealer-cards');
 const playerScoreEl = document.getElementById('player-score');
@@ -84,7 +83,7 @@ function initGame() {
     dealerCardsEl.innerHTML = '';
     playerScoreEl.textContent = '0';
     dealerScoreEl.textContent = '?';
-    messageEl.textContent = 'Нажмите "Взять карту" для начала';
+    messageEl.textContent = 'Make Bet to start ';
     playerMoneyEl.textContent = playerMoney;
 
     hitBtn.disabled = false;
@@ -155,7 +154,7 @@ function checkPlayerBust() {
             }
         }
         if (playerScore > 21) {
-            endGame('Перебор! Вы проиграли.');
+            endGame('Dealer Win');
         }
     }
 }
@@ -205,15 +204,15 @@ function checkWinner() {
     let message = '';
 
     if (dealerScore > 21) {
-        message = 'Дилер перебрал! Вы выиграли!';
+        message = 'Wiin!';
         playerMoney += stake * 2;
     } else if (playerScore > dealerScore) {
-        message = 'Вы выиграли!';
+        message = 'Dealer Win!';
         playerMoney += stake * 2;
     } else if (playerScore < dealerScore) {
-        message = 'Дилер выиграл!';
+        message = 'Wiin!';
     } else {
-        message = 'Ничья!';
+        message = 'Tie!';
         playerMoney += stake;
     }
 
@@ -256,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
             playerMoneyEl.textContent = playerMoney;
             initGame();
         } else {
-            messageEl.textContent = "Некорректная ставка";
+            messageEl.textContent = "Undefined Bet";
             hitBtn.disabled = true;
             standBtn.disabled = true;
         }
