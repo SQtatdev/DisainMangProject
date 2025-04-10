@@ -56,6 +56,8 @@ let initialDealComplete = false;
 
 let playerMoney = 100;
 let stake = 0;
+let StartMoney = 100;
+let Stake = 0 
 
 // DOM элементы
 const hitBtn = document.getElementById('hit-btn');
@@ -69,16 +71,23 @@ const dealerScoreEl = document.getElementById('dealer-score');
 const messageEl = document.getElementById('message');
 const playerMoneyEl = document.getElementById('player-money');
 const stakeInput = document.getElementById('StakeInput');
+const submitBtn = document.getElementById('submitBtn');
 
 // ============ Инициализация игры ============
+// ============ Инициализация ============
 function initGame() {
     playerScore = 0;
     dealerScore = 0;
+    PlayerMoney = StartMoney
+    Stake = 0;
     gameOver = false;
     playerTurn = true;
     playerCards = [];
     dealerCards = [];
     initialDealComplete = false;
+
+
+    document.getElementById('player-money').textContent = PlayerMoney;
 
     playerCardsEl.innerHTML = '';
     dealerCardsEl.innerHTML = '';
@@ -90,6 +99,7 @@ function initGame() {
     hitBtn.disabled = false;
     standBtn.disabled = false;
 
+
     currentDeck = shuffleDeck([...fullDeck]);
 
     // Раздача начальных карт
@@ -97,6 +107,14 @@ function initGame() {
     dealCard('dealer', true);
     dealCard('player');
     dealCard('dealer');
+
+    hitBtn.disabled = false;
+    standBtn.disabled = false;
+
+    
+    // Скрытые карты дилера
+    dealCard('dealer', true);
+    dealCard('dealer', true);
 }
 
 // ============ Перемешивание ============
@@ -113,11 +131,21 @@ function dealCard(target, hidden = false) {
     if (gameOver || currentDeck.length === 0) return;
 
     const card = currentDeck.pop();
+
     const cardEl = document.createElement('div');
     cardEl.className = 'card';
 
     if (hidden) {
         cardEl.style.backgroundImage = `url(images/cards/dealer.png)`;
+        cardEl.dataset.hidden = 'true';
+    } else {
+        cardEl.style.backgroundImage = `url(${card.image})`;
+        cardEl.dataset.hidden = 'false';
+    }
+
+
+    if (hidden) {
+        cardEl.style.backgroundImage = `url(images/cards/dealer.png)`; // Рубашка
         cardEl.dataset.hidden = 'true';
     } else {
         cardEl.style.backgroundImage = `url(${card.image})`;
@@ -136,6 +164,9 @@ function dealCard(target, hidden = false) {
         checkPlayerBust();
     } else if (target === 'dealer') {
         dealerCards.push(card);
+    } else if (target === 'dealer') {
+        dealerScore += card.value;
+        dealerCards.push(card);
         dealerCardsEl.appendChild(cardEl);
         if (!hidden) {
             dealerScore += card.value;
@@ -144,9 +175,14 @@ function dealCard(target, hidden = false) {
 }
 
 // ============ Проверка перебора ============
+    }
+}
+
+// ============ Проверка перебора игрока ============
 function checkPlayerBust() {
     if (playerScore > 21) {
         const aces = document.querySelectorAll('#player-cards .card[data-is-ace="true"]');
+
         for (const ace of aces) {
             if (playerScore > 21 && ace.dataset.aceValue !== '1') {
                 playerScore -= 10;
@@ -154,6 +190,7 @@ function checkPlayerBust() {
                 playerScoreEl.textContent = playerScore;
             }
         }
+
         if (playerScore > 21) {
             endGame('Перебор! Вы проиграли.');
         }
@@ -178,6 +215,25 @@ function revealDealerCards() {
 }
 
 // ============ Ход дилера ============
+// ============ Вскрытие карт дилера ============
+function revealDealerCards() {
+    const dealerCardElements = dealerCardsEl.children;
+    dealerScore = 0;
+
+    for (let i = 0; i < dealerCardElements.length; i++) {
+        const cardEl = dealerCardElements[i];
+        const card = dealerCards[i];
+
+        cardEl.style.backgroundImage = `url(${card.image})`;
+        cardEl.dataset.hidden = 'false';
+
+        dealerScore += card.value;
+    }
+
+    dealerScoreEl.textContent = dealerScore;
+}
+
+// ============ Ход дилера ============
 function dealerTurn() {
     playerTurn = false;
     hitBtn.disabled = true;
@@ -187,9 +243,17 @@ function dealerTurn() {
 
     const play = () => {
         if (dealerScore < 17 || (dealerScore === 17 && dealerCards.some(c => c.isAce))) {
+
+    revealDealerCards();
+
+    // AI дилера
+    const play = () => {
+        if (dealerScore < 17 || (dealerScore === 17 && dealerCards.some(c => c.isAce))) {
             setTimeout(() => {
                 dealCard('dealer');
                 revealDealerCards();
+                play();
+                revealDealerCards(); // обновим счёт
                 play();
             }, 1000);
         } else {
@@ -201,26 +265,38 @@ function dealerTurn() {
 }
 
 // ============ Определение победителя ============
+// ============ Выбор победителя ============
 function checkWinner() {
     let message = '';
 
     if (dealerScore > 21) {
         message = 'Дилер перебрал! Вы выиграли!';
         playerMoney += stake * 2;
+        playerMoney = playerMoneyNew * 2
+    } else if (playerScore > 21) {
+        message = 'Вы перебрали! Дилер выиграл!';
+        playerMoney = playerMoneyNew
     } else if (playerScore > dealerScore) {
         message = 'Вы выиграли!';
         playerMoney += stake * 2;
+        message = 'Вы выиграли!';
+        playerMoney = playerMoneyNew * 2
     } else if (playerScore < dealerScore) {
         message = 'Дилер выиграл!';
     } else {
         message = 'Ничья!';
         playerMoney += stake;
+        playerMoney = playerMoneyNew
+    } else if (playerScore === dealerScore) {
+        message = 'ничья';
+        playerMoney = playerMoneyNew + Stake
     }
 
     endGame(message);
 }
 
 // ============ Завершение игры ============
+// ============ Завершение ============
 function endGame(message) {
     gameOver = true;
     messageEl.textContent = message;
@@ -262,3 +338,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+restartBtn.addEventListener('click', initGame);
+
+submitBtn.addEventListener('click', () => {
+    const Stake = StakeInput.value.trim();
+
+    PlayerMoney = PlayerMoney - Stake;
+    document.getElementById('player-money').textContent = PlayerMoney;
+
+})
+
+// Старт
+document.addEventListener('DOMContentLoaded', initGame);
