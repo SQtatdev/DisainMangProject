@@ -207,10 +207,10 @@ function checkWinner() {
         message = 'Wiin!';
         playerMoney += stake * 2;
     } else if (playerScore > dealerScore) {
-        message = 'Dealer Win!';
+        message = 'Win!';
         playerMoney += stake * 2;
     } else if (playerScore < dealerScore) {
-        message = 'Wiin!';
+        message = 'Dealer Wiin!';
     } else {
         message = 'Tie!';
         playerMoney += stake;
