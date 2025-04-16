@@ -202,6 +202,7 @@ function dealerTurn() {
 // ============ Определение победителя ============
 function checkWinner() {
     let message = '';
+    submitBtn.disabled = false;
 
     if (dealerScore > 21) {
         message = 'Wiin!';
@@ -211,6 +212,7 @@ function checkWinner() {
         playerMoney += stake * 2;
     } else if (playerScore < dealerScore) {
         message = 'Dealer Wiin!';
+
     } else {
         message = 'Tie!';
         playerMoney += stake;
@@ -253,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stake = enteredStake;
             playerMoney -= stake;
             playerMoneyEl.textContent = playerMoney;
+            submitBtn.disabled = true;
             initGame();
         } else {
             messageEl.textContent = "Undefined Bet";
